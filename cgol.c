@@ -8,7 +8,9 @@
 #define GRID_SIZE 10
 #define MAX_GENERATIONS 10
 
+#ifndef TEST
 #define TEST 0
+#endif
 
 void seed_grid(int *grid);
 void print_grid(const int *grid, const int generations);
@@ -60,7 +62,9 @@ void seed_grid(int *grid) {
 }
 
 void print_grid(const int *grid, const int generations) {
-  system("clear");
+  if (system("clear") != 0) {
+    err(EXIT_FAILURE, "Failed to clean terminal.\n");
+  }
 
   if (generations == 0) {
     printf("Seed\n");
