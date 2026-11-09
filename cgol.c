@@ -3,11 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define GRID_SIZE 10
 #define MAX_GENERATIONS 10
 
-#define TEST 1
+#define TEST 0
 
 void seed_grid(int *grid);
 void print_grid(const int *grid, const int generations);
@@ -59,6 +60,8 @@ void seed_grid(int *grid) {
 }
 
 void print_grid(const int *grid, const int generations) {
+  system("clear");
+
   if (generations == 0) {
     printf("Seed\n");
   } else {
@@ -80,6 +83,8 @@ void print_grid(const int *grid, const int generations) {
     printf("\n");
   }
   printf("\n");
+
+  sleep(1);
 }
 
 // return grid of live neighbours per cell given a grid
