@@ -39,11 +39,13 @@ int main(void) {
   int generations = 0;
   seed_grid(grid);
   print_grid(grid, generations);
+  sleep(1);
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
     tick(grid);
     ++generations;
     print_grid(grid, generations);
+    sleep(1);
   }
 #endif
   free(grid);
@@ -87,8 +89,6 @@ void print_grid(const int *grid, const int generations) {
     printf("\n");
   }
   printf("\n");
-
-  sleep(1);
 }
 
 // return grid of live neighbours per cell given a grid
