@@ -7,7 +7,7 @@
 #define GRID_SIZE 10
 #define MAX_GENERATIONS 10
 
-#define TEST 0
+#define TEST 1
 
 void seed_grid(int *grid);
 void print_grid(const int *grid, const int generations);
@@ -20,7 +20,6 @@ void test_block(int *grid);
 void test_blinker(int *grid);
 
 int main(void) {
-  int generations = 0;
   int *grid = calloc(GRID_SIZE * GRID_SIZE, sizeof(int));
 
   if (!grid) {
@@ -34,6 +33,7 @@ int main(void) {
   test_blinker(grid);
   printf("Passed all tests.\n");
 #else
+  int generations = 0;
   seed_grid(grid);
   print_grid(grid, generations);
 
@@ -96,21 +96,19 @@ int *neighbours(const int *grid) {
       int cell = i * GRID_SIZE + j;
       assert(grid[cell] == 0 || grid[cell] == 1);
 
-      if (((i - 1) >= 0) && ((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
-        ngrid[cell] += grid[(i - 1) * GRID_SIZE + (j - 1)];
-        ngrid[cell] += grid[(i - 1) * GRID_SIZE + j];
-        ngrid[cell] += grid[(i - 1) * GRID_SIZE + (j + 1)];
-      }
+      for (int di = -1; di <= 1; ++di) {
+        for (int dj = -1; dj <= 1; ++dj) {
+          if (di == 0 && dj == 0) {
+            continue;
+          }
 
-      if (((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
-        ngrid[cell] += grid[i * GRID_SIZE + (j - 1)];
-        ngrid[cell] += grid[i * GRID_SIZE + (j + 1)];
-      }
+          int row = i + di;
+          int col = j + dj;
 
-      if (((i + 1) < GRID_SIZE) && ((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
-        ngrid[cell] += grid[(i + 1) * GRID_SIZE + (j - 1)];
-        ngrid[cell] += grid[(i + 1) * GRID_SIZE + j];
-        ngrid[cell] += grid[(i + 1) * GRID_SIZE + (j + 1)];
+          if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+            ngrid[cell] += grid[row * GRID_SIZE + col];
+          }
+        }
       }
 
       assert(ngrid[cell] >= 0 && ngrid[cell] <= 8);
@@ -195,15 +193,15 @@ void test_one_live_cell(int *grid) {
 void test_block(int *grid) {
   test_init(grid);
 
-  int cell11 = (GRID_SIZE / 2) * GRID_SIZE + (GRID_SIZE / 2);
-  int cell12 = (GRID_SIZE / 2) * GRID_SIZE + ((GRID_SIZE / 2) + 1);
-  int cell21 = ((GRID_SIZE / 2) + 1) * GRID_SIZE + (GRID_SIZE / 2);
-  int cell22 = ((GRID_SIZE / 2) + 1) * GRID_SIZE + ((GRID_SIZE / 2) + 1);
+  int cell00 = 0;
+  int cell01 = 1;
+  int cell10 = GRID_SIZE;
+  int cell11 = GRID_SIZE + 1;
 
+  grid[cell00] = 1;
+  grid[cell01] = 1;
+  grid[cell10] = 1;
   grid[cell11] = 1;
-  grid[cell12] = 1;
-  grid[cell21] = 1;
-  grid[cell22] = 1;
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
     tick(grid);
@@ -211,8 +209,8 @@ void test_block(int *grid) {
     for (int i = 0; i < GRID_SIZE; ++i) {
       for (int j = 0; j < GRID_SIZE; ++j) {
         int cell = i * GRID_SIZE + j;
-        if (cell == cell11 || cell == cell12 || cell == cell21 ||
-            cell == cell22) {
+        if (cell == cell00 || cell == cell01 || cell == cell10 ||
+            cell == cell11) {
           assert(grid[cell] == 1);
         } else {
           assert(grid[cell] == 0);
