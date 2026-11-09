@@ -1,10 +1,11 @@
 #include <assert.h>
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define GRID_SIZE 100
-#define MAX_GENERATIONS 100
+#define GRID_SIZE 10
+#define MAX_GENERATIONS 10
 
 #define TEST 0
 
@@ -21,6 +22,10 @@ void test_blinker(int *grid);
 int main(void) {
   int generations = 0;
   int *grid = calloc(GRID_SIZE * GRID_SIZE, sizeof(int));
+
+  if (!grid) {
+    err(EXIT_FAILURE, "Failed to allocate grid.\n");
+  }
 
 #if TEST
   test_empty_grid(grid);
@@ -39,9 +44,112 @@ int main(void) {
   }
 #endif
   free(grid);
-  return 0;
+  exit(EXIT_SUCCESS);
 }
 
+void seed_grid(int *grid) {
+  srand(time(NULL));
+  for (int i = 0; i < GRID_SIZE; ++i) {
+    for (int j = 0; j < GRID_SIZE; ++j) {
+      int cell = i * GRID_SIZE + j;
+      assert(grid[cell] == 0 || grid[cell] == 1);
+      grid[cell] = (rand() & 1) ? 1 : 0;
+    }
+  }
+}
+
+void print_grid(const int *grid, const int generations) {
+  if (generations == 0) {
+    printf("Seed\n");
+  } else {
+    printf("Generation %d\n", generations);
+  }
+
+  for (int i = 0; i < GRID_SIZE; ++i) {
+    for (int j = 0; j < GRID_SIZE; ++j) {
+      int cell = i * GRID_SIZE + j;
+
+      assert(grid[cell] == 0 || grid[cell] == 1);
+
+      if (grid[cell]) {
+        printf("X ");
+      } else {
+        printf(". ");
+      }
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
+// return grid of live neighbours per cell given a grid
+// caller frees
+int *neighbours(const int *grid) {
+  int *ngrid = calloc(GRID_SIZE * GRID_SIZE, sizeof(int));
+
+  if (!ngrid) {
+    err(EXIT_FAILURE, "Failed to allocate neighbour grid.\n");
+  }
+
+  for (int i = 0; i < GRID_SIZE; ++i) {
+    for (int j = 0; j < GRID_SIZE; ++j) {
+      int cell = i * GRID_SIZE + j;
+      assert(grid[cell] == 0 || grid[cell] == 1);
+
+      if (((i - 1) >= 0) && ((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
+        ngrid[cell] += grid[(i - 1) * GRID_SIZE + (j - 1)];
+        ngrid[cell] += grid[(i - 1) * GRID_SIZE + j];
+        ngrid[cell] += grid[(i - 1) * GRID_SIZE + (j + 1)];
+      }
+
+      if (((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
+        ngrid[cell] += grid[i * GRID_SIZE + (j - 1)];
+        ngrid[cell] += grid[i * GRID_SIZE + (j + 1)];
+      }
+
+      if (((i + 1) < GRID_SIZE) && ((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
+        ngrid[cell] += grid[(i + 1) * GRID_SIZE + (j - 1)];
+        ngrid[cell] += grid[(i + 1) * GRID_SIZE + j];
+        ngrid[cell] += grid[(i + 1) * GRID_SIZE + (j + 1)];
+      }
+
+      assert(ngrid[cell] >= 0 && ngrid[cell] <= 8);
+    }
+  }
+
+  return ngrid;
+}
+
+void tick(int *grid) {
+  int *ngrid = neighbours(grid);
+
+  for (int i = 0; i < GRID_SIZE; ++i) {
+    for (int j = 0; j < GRID_SIZE; ++j) {
+      int cell = i * GRID_SIZE + j;
+      assert(grid[cell] == 0 || grid[cell] == 1);
+      int live = grid[cell];
+      int n = ngrid[cell];
+
+      if (live) {
+        if (n < 2) {
+          grid[cell] = 0;
+        } else if (n > 3) {
+          grid[cell] = 0;
+        } else if (n == 2 || n == 3) {
+          grid[cell] = 1;
+        }
+      } else {
+        if (n == 3) {
+          grid[cell] = 1;
+        }
+      }
+    }
+  }
+
+  free(ngrid);
+}
+
+// tests
 void test_init(int *grid) {
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
@@ -152,105 +260,4 @@ void test_blinker(int *grid) {
       }
     }
   }
-}
-
-void seed_grid(int *grid) {
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
-      assert(grid[cell] == 0 || grid[cell] == 1);
-      grid[cell] = (rand() & 1) ? 1 : 0;
-    }
-  }
-}
-
-void print_grid(const int *grid, const int generations) {
-  if (generations == 0) {
-    printf("Seed\n");
-  } else {
-    printf("Generation %d\n", generations);
-  }
-
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
-
-      assert(grid[cell] == 0 || grid[cell] == 1);
-
-      if (grid[cell]) {
-        printf("X ");
-      } else {
-        printf(". ");
-      }
-    }
-    printf("\n");
-  }
-  printf("\n");
-}
-
-// return grid of live neighbours per cell given a grid
-// caller frees
-int *neighbours(const int *grid) {
-  int *ngrid = calloc(GRID_SIZE * GRID_SIZE, sizeof(int));
-
-  if (!ngrid) {
-    return NULL;
-  }
-
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
-      assert(grid[cell] == 0 || grid[cell] == 1);
-
-      if (((i - 1) >= 0) && ((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
-        ngrid[cell] += grid[(i - 1) * GRID_SIZE + (j - 1)];
-        ngrid[cell] += grid[(i - 1) * GRID_SIZE + j];
-        ngrid[cell] += grid[(i - 1) * GRID_SIZE + (j + 1)];
-      }
-
-      if (((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
-        ngrid[cell] += grid[i * GRID_SIZE + (j - 1)];
-        ngrid[cell] += grid[i * GRID_SIZE + (j + 1)];
-      }
-
-      if (((i + 1) < GRID_SIZE) && ((j - 1) >= 0) && ((j + 1) < GRID_SIZE)) {
-        ngrid[cell] += grid[(i + 1) * GRID_SIZE + (j - 1)];
-        ngrid[cell] += grid[(i + 1) * GRID_SIZE + j];
-        ngrid[cell] += grid[(i + 1) * GRID_SIZE + (j + 1)];
-      }
-
-      assert(ngrid[cell] >= 0 && ngrid[cell] <= 8);
-    }
-  }
-
-  return ngrid;
-}
-
-void tick(int *grid) {
-  int *ngrid = neighbours(grid);
-
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
-      assert(grid[cell] == 0 || grid[cell] == 1);
-      int live = grid[cell];
-      int n = ngrid[cell];
-
-      if (live) {
-        if (n < 2) {
-          grid[cell] = 0;
-        } else if (n > 3) {
-          grid[cell] = 0;
-        } else if (n == 2 || n == 3) {
-          grid[cell] = 1;
-        }
-      } else {
-        if (n == 3) {
-          grid[cell] = 1;
-        }
-      }
-    }
-  }
-
-  free(ngrid);
 }
