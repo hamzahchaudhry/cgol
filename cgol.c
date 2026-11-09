@@ -2,6 +2,7 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -12,28 +13,35 @@
 #define TEST 0
 #endif
 
+void reset_grid(int *g);
 void seed_grid(int *grid);
 void print_grid(const int *grid, const int generations);
-int *neighbours(const int *grid);
-void tick(int *grid);
+void neighbours(int *ngrid, const int *grid);
+void tick(int *ngrid, int *grid);
 
-void test_empty_grid(int *grid);
-void test_one_live_cell(int *grid);
-void test_block(int *grid);
-void test_blinker(int *grid);
+void test_empty_grid(int *ngrid, int *grid);
+void test_one_live_cell(int *ngrid, int *grid);
+void test_block(int *ngrid, int *grid);
+void test_blinker(int *ngrid, int *grid);
 
 int main(void) {
-  int *grid = calloc(GRID_SIZE * GRID_SIZE, sizeof(int));
+  int *grid = malloc(GRID_SIZE * GRID_SIZE * sizeof(int));
+  int *ngrid = malloc(GRID_SIZE * GRID_SIZE * sizeof(int));
 
   if (!grid) {
     err(EXIT_FAILURE, "Failed to allocate grid.\n");
   }
 
+  if (!ngrid) {
+    free(grid);
+    err(EXIT_FAILURE, "Failed to allocate neighbour grid.\n");
+  }
+
 #if TEST
-  test_empty_grid(grid);
-  test_one_live_cell(grid);
-  test_block(grid);
-  test_blinker(grid);
+  test_empty_grid(ngrid, grid);
+  test_one_live_cell(ngrid, grid);
+  test_block(ngrid, grid);
+  test_blinker(ngrid, grid);
   printf("Passed all tests.\n");
 #else
   int generations = 0;
@@ -42,22 +50,24 @@ int main(void) {
   sleep(1);
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
-    tick(grid);
+    tick(ngrid, grid);
     ++generations;
     print_grid(grid, generations);
     sleep(1);
   }
 #endif
   free(grid);
+  free(ngrid);
   exit(EXIT_SUCCESS);
 }
+
+void reset_grid(int *g) { memset(g, 0, GRID_SIZE * GRID_SIZE * sizeof(int)); }
 
 void seed_grid(int *grid) {
   srand(time(NULL));
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
       int cell = i * GRID_SIZE + j;
-      assert(grid[cell] == 0 || grid[cell] == 1);
       grid[cell] = (rand() & 1) ? 1 : 0;
     }
   }
@@ -91,19 +101,13 @@ void print_grid(const int *grid, const int generations) {
   printf("\n");
 }
 
-// return grid of live neighbours per cell given a grid
-// caller frees
-int *neighbours(const int *grid) {
-  int *ngrid = calloc(GRID_SIZE * GRID_SIZE, sizeof(int));
-
-  if (!ngrid) {
-    err(EXIT_FAILURE, "Failed to allocate neighbour grid.\n");
-  }
-
+void neighbours(int *ngrid, const int *grid) {
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
       int cell = i * GRID_SIZE + j;
       assert(grid[cell] == 0 || grid[cell] == 1);
+
+      ngrid[cell] = 0;
 
       for (int di = -1; di <= 1; ++di) {
         for (int dj = -1; dj <= 1; ++dj) {
@@ -123,12 +127,10 @@ int *neighbours(const int *grid) {
       assert(ngrid[cell] >= 0 && ngrid[cell] <= 8);
     }
   }
-
-  return ngrid;
 }
 
-void tick(int *grid) {
-  int *ngrid = neighbours(grid);
+void tick(int *ngrid, int *grid) {
+  neighbours(ngrid, grid);
 
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
@@ -152,25 +154,14 @@ void tick(int *grid) {
       }
     }
   }
-
-  free(ngrid);
 }
 
 // tests
-void test_init(int *grid) {
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
-      grid[cell] = 0;
-    }
-  }
-}
-
-void test_empty_grid(int *grid) {
-  test_init(grid);
+void test_empty_grid(int *ngrid, int *grid) {
+  reset_grid(grid);
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
-    tick(grid);
+    tick(ngrid, grid);
 
     for (int i = 0; i < GRID_SIZE; ++i) {
       for (int j = 0; j < GRID_SIZE; ++j) {
@@ -181,14 +172,14 @@ void test_empty_grid(int *grid) {
   }
 }
 
-void test_one_live_cell(int *grid) {
-  test_init(grid);
+void test_one_live_cell(int *ngrid, int *grid) {
+  reset_grid(grid);
 
   int live_cell = (GRID_SIZE / 2) * GRID_SIZE + (GRID_SIZE / 2);
   grid[live_cell] = 1;
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
-    tick(grid);
+    tick(ngrid, grid);
 
     for (int i = 0; i < GRID_SIZE; ++i) {
       for (int j = 0; j < GRID_SIZE; ++j) {
@@ -199,8 +190,8 @@ void test_one_live_cell(int *grid) {
   }
 }
 
-void test_block(int *grid) {
-  test_init(grid);
+void test_block(int *ngrid, int *grid) {
+  reset_grid(grid);
 
   int cell00 = 0;
   int cell01 = 1;
@@ -213,7 +204,7 @@ void test_block(int *grid) {
   grid[cell11] = 1;
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
-    tick(grid);
+    tick(ngrid, grid);
 
     for (int i = 0; i < GRID_SIZE; ++i) {
       for (int j = 0; j < GRID_SIZE; ++j) {
@@ -229,8 +220,8 @@ void test_block(int *grid) {
   }
 }
 
-void test_blinker(int *grid) {
-  test_init(grid);
+void test_blinker(int *ngrid, int *grid) {
+  reset_grid(grid);
 
   int cell_center = (GRID_SIZE / 2) * GRID_SIZE + (GRID_SIZE / 2);
   int cell_top = ((GRID_SIZE / 2) + 1) * GRID_SIZE + (GRID_SIZE / 2);
@@ -242,7 +233,7 @@ void test_blinker(int *grid) {
   grid[cell_left] = 1;
   grid[cell_right] = 1;
 
-  tick(grid);
+  tick(ngrid, grid);
 
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
@@ -255,7 +246,7 @@ void test_blinker(int *grid) {
     }
   }
 
-  tick(grid);
+  tick(ngrid, grid);
 
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
