@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 #define GRID_SIZE 10
@@ -14,7 +13,7 @@
 #endif
 
 void reset_grid(int *g);
-void seed_grid(int *grid);
+void seed_grid(int *grid, int seed);
 void print_grid(const int *grid, const int generations);
 void neighbours(int *ngrid, const int *grid);
 void tick(int *ngrid, int *grid);
@@ -24,7 +23,16 @@ void test_one_live_cell(int *ngrid, int *grid);
 void test_block(int *ngrid, int *grid);
 void test_blinker(int *ngrid, int *grid);
 
-int main(void) {
+int main(int argc, char *argv[]) {
+#if !TEST
+  if (argc != 2) {
+    errx(EXIT_FAILURE, "usage: %s <seed>", argv[0]);
+  }
+#else
+  (void)argc;
+  (void)argv;
+#endif
+
   int *grid = malloc(GRID_SIZE * GRID_SIZE * sizeof(int));
   int *ngrid = malloc(GRID_SIZE * GRID_SIZE * sizeof(int));
 
@@ -45,7 +53,8 @@ int main(void) {
   printf("Passed all tests.\n");
 #else
   int generations = 0;
-  seed_grid(grid);
+  int seed = atoi(argv[1]);
+  seed_grid(grid, seed);
   print_grid(grid, generations);
   sleep(1);
 
@@ -63,8 +72,8 @@ int main(void) {
 
 void reset_grid(int *g) { memset(g, 0, GRID_SIZE * GRID_SIZE * sizeof(int)); }
 
-void seed_grid(int *grid) {
-  srand(time(NULL));
+void seed_grid(int *grid, int seed) {
+  srand(seed);
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
       int cell = i * GRID_SIZE + j;

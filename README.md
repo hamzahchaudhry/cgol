@@ -17,7 +17,7 @@ make cgol
 ## Running
 
 ```sh
-./build/cgol
+./build/cgol <seed>
 ```
 
 ## Testing
