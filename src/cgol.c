@@ -7,21 +7,21 @@
 #include <string.h>
 #include <unistd.h>
 
-void reset_grid(int *g) { memset(g, 0, GRID_SIZE * GRID_SIZE * sizeof(int)); }
+void reset_grid(int *g, const int size) { memset(g, 0, size * size * sizeof(int)); }
 
-void seed_grid(int *grid, int seed) {
+void seed_grid(int *grid, const int size, const int seed) {
   srand(seed);
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      int cell = i * size + j;
       grid[cell] = (rand() & 1) ? 1 : 0;
     }
   }
 }
 
-void print_grid(const int *grid, const int generations) {
+void print_grid(const int *grid, const int size, const int generations) {
   if (system("clear") != 0) {
-    err(EXIT_FAILURE, "Failed to clean terminal.\n");
+    errx(EXIT_FAILURE, "Failed to clear terminal.");
   }
 
   if (generations == 0) {
@@ -30,9 +30,9 @@ void print_grid(const int *grid, const int generations) {
     printf("Generation %d\n", generations);
   }
 
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      int cell = i * size + j;
 
       assert(grid[cell] == 0 || grid[cell] == 1);
 
@@ -47,10 +47,10 @@ void print_grid(const int *grid, const int generations) {
   printf("\n");
 }
 
-void neighbours(int *ngrid, const int *grid) {
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
+void neighbours(int *ngrid, const int *grid, const int size) {
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      int cell = i * size + j;
       assert(grid[cell] == 0 || grid[cell] == 1);
 
       ngrid[cell] = 0;
@@ -64,8 +64,8 @@ void neighbours(int *ngrid, const int *grid) {
           int row = i + di;
           int col = j + dj;
 
-          if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
-            ngrid[cell] += grid[row * GRID_SIZE + col];
+          if (row >= 0 && row < size && col >= 0 && col < size) {
+            ngrid[cell] += grid[row * size + col];
           }
         }
       }
@@ -75,12 +75,12 @@ void neighbours(int *ngrid, const int *grid) {
   }
 }
 
-void tick(int *ngrid, int *grid) {
-  neighbours(ngrid, grid);
+void tick(int *ngrid, int *grid, const int size) {
+  neighbours(ngrid, grid, size);
 
-  for (int i = 0; i < GRID_SIZE; ++i) {
-    for (int j = 0; j < GRID_SIZE; ++j) {
-      int cell = i * GRID_SIZE + j;
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      int cell = i * size + j;
       assert(grid[cell] == 0 || grid[cell] == 1);
       int live = grid[cell];
       int n = ngrid[cell];

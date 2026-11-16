@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#define GRID_SIZE 10
+
 static void test_empty_grid(int *ngrid, int *grid);
 static void test_one_live_cell(int *ngrid, int *grid);
 static void test_block(int *ngrid, int *grid);
@@ -22,10 +24,10 @@ int main(void) {
 }
 
 static void test_empty_grid(int *ngrid, int *grid) {
-  reset_grid(grid);
+  reset_grid(grid, GRID_SIZE);
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
-    tick(ngrid, grid);
+    tick(ngrid, grid, GRID_SIZE);
 
     for (int i = 0; i < GRID_SIZE; ++i) {
       for (int j = 0; j < GRID_SIZE; ++j) {
@@ -37,13 +39,13 @@ static void test_empty_grid(int *ngrid, int *grid) {
 }
 
 static void test_one_live_cell(int *ngrid, int *grid) {
-  reset_grid(grid);
+  reset_grid(grid, GRID_SIZE);
 
   int live_cell = (GRID_SIZE / 2) * GRID_SIZE + (GRID_SIZE / 2);
   grid[live_cell] = 1;
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
-    tick(ngrid, grid);
+    tick(ngrid, grid, GRID_SIZE);
 
     for (int i = 0; i < GRID_SIZE; ++i) {
       for (int j = 0; j < GRID_SIZE; ++j) {
@@ -55,7 +57,7 @@ static void test_one_live_cell(int *ngrid, int *grid) {
 }
 
 static void test_block(int *ngrid, int *grid) {
-  reset_grid(grid);
+  reset_grid(grid, GRID_SIZE);
 
   int cell00 = 0;
   int cell01 = 1;
@@ -68,7 +70,7 @@ static void test_block(int *ngrid, int *grid) {
   grid[cell11] = 1;
 
   for (int i = 0; i < MAX_GENERATIONS; ++i) {
-    tick(ngrid, grid);
+    tick(ngrid, grid, GRID_SIZE);
 
     for (int i = 0; i < GRID_SIZE; ++i) {
       for (int j = 0; j < GRID_SIZE; ++j) {
@@ -85,7 +87,7 @@ static void test_block(int *ngrid, int *grid) {
 }
 
 static void test_blinker(int *ngrid, int *grid) {
-  reset_grid(grid);
+  reset_grid(grid, GRID_SIZE);
 
   int cell_center = (GRID_SIZE / 2) * GRID_SIZE + (GRID_SIZE / 2);
   int cell_top = ((GRID_SIZE / 2) + 1) * GRID_SIZE + (GRID_SIZE / 2);
@@ -97,7 +99,7 @@ static void test_blinker(int *ngrid, int *grid) {
   grid[cell_left] = 1;
   grid[cell_right] = 1;
 
-  tick(ngrid, grid);
+  tick(ngrid, grid, GRID_SIZE);
 
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
@@ -110,7 +112,7 @@ static void test_blinker(int *ngrid, int *grid) {
     }
   }
 
-  tick(ngrid, grid);
+  tick(ngrid, grid, GRID_SIZE);
 
   for (int i = 0; i < GRID_SIZE; ++i) {
     for (int j = 0; j < GRID_SIZE; ++j) {
