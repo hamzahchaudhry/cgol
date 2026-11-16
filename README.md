@@ -2,13 +2,11 @@
 
 Conway's Game of Life written in C for funzies.
 
-Starts with a pseudorandom square grid generated from the supplied seed and runs for `MAX_GENERATIONS` generations, updating once per second. `X` represents a live cell and `.` represents a dead cell.
+Starts with a pseudorandom square grid generated from the supplied seed and runs for the supplied number of generations, updating once per second. `X` represents a live cell and `.` represents a dead cell.
 
 ## Configuration
 
-Grid size and random seed are CLI arguments. Grid size must be between 1 and 1000.
-
-`MAX_GENERATIONS` is defined in [`include/cgol.h`](include/cgol.h).
+Grid size, random seed, and generation count are CLI arguments, in that order. Grid size and generation count must each be between 1 and 1000.
 
 ## Building
 
@@ -19,10 +17,10 @@ make cgol
 ## Running
 
 ```sh
-./build/cgol 10 42
+./build/cgol 10 42 10
 ```
 
-This runs a 10 x 10 grid with seed 42.
+This runs a 10 x 10 grid with seed 42 for 10 generations.
 
 ## Testing
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #define GRID_SIZE 10
+#define MAX_GENERATIONS 10
 
 static void test_empty_grid(int *ngrid, int *grid);
 static void test_one_live_cell(int *ngrid, int *grid);

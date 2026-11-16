@@ -5,13 +5,18 @@
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
-  if (argc != 3) {
-    errx(EXIT_FAILURE, "usage: %s <size> <seed>.", argv[0]);
+  if (argc != 4) {
+    errx(EXIT_FAILURE, "usage: %s <size> <seed> <generations>.", argv[0]);
   }
 
   int size = atoi(argv[1]);
   if (size < 1 || size > 1000) {
     errx(EXIT_FAILURE, "Size must be between 1 and 1000.");
+  }
+
+  int max_generations = atoi(argv[3]);
+  if (max_generations < 1 || max_generations > 1000) {
+    errx(EXIT_FAILURE, "Generations must be between 1 and 1000.");
   }
 
   int *grid = malloc(size * size * sizeof(int));
@@ -34,7 +39,7 @@ int main(int argc, char *argv[]) {
   print_grid(grid, size, generations);
   sleep(1);
 
-  for (int i = 0; i < MAX_GENERATIONS; ++i) {
+  for (int i = 0; i < max_generations; ++i) {
     tick(ngrid, grid, size);
     ++generations;
     print_grid(grid, size, generations);
